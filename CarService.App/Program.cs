@@ -2,34 +2,80 @@
 using CarService.App.Data;
 using CarService.App.Entities;
 using CarService.App.Repositories;
-using System.ComponentModel.Design;
+using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
 
-var carRepository = new SqlRepository<Car>(new CarServiceDbContext());
-AddHatchbacks(carRepository);
-AddSUVs(carRepository);
-WriteAllToConsole(carRepository);
+bool ExitApp = false;
+Console.WriteLine("--Witam w aplikacji serwisowej służącej do zapisu samochodów odwiedzających serwis--");
+Console.WriteLine();
+var carRepository = new FileRepository<Car>();
 
-static void AddHatchbacks(IRepository<Car> carRepository)
+//carRepository.ItemAdded += CarAdded;
+//carRepository.ItemRemoved += CarRemoved;
+
+while(!ExitApp)
 {
-    carRepository.Add(new Car { CarName = "Audi A3" });
-    carRepository.Add(new Car { CarName = "VW Passat B5" });
-    carRepository.Add(new Car { CarName = "Fiat Bravo" });
-    carRepository.Save();
-}
+    Console.WriteLine("-----Wybierz co chcesz zrobić poniżej wpisując odpowiedni numer akcji-----");
+    Console.WriteLine();
+    Console.WriteLine("1 ------- aby odczytać wszystkie samochody na serwisie");
+    Console.WriteLine("2 ------- aby dodać samochód na serwis");
+    Console.WriteLine("3 ------- aby usunąć samochód z serwisu");
+    var input = Console.ReadLine();
 
-static void AddSUVs(IWriteRepository<SUV> SUVRepository)
-{
-    SUVRepository.Add(new SUV { CarName = "BMW X1" });
-    SUVRepository.Add(new SUV { CarName = "Audi Q5" });
-    SUVRepository.Add(new SUV { CarName = "Mazda CX5" });
-    SUVRepository.Save();
-}
-
-static void WriteAllToConsole(IReadRepository<ICar> repository)
-{
-    var items = repository.GetAll();
-    foreach (var item in items)
+    switch(input)
     {
-        Console.WriteLine(item);
+        case "1":
+            Console.WriteLine("Odczytuję wszystkie samochody w serwisie");
+            {
+                WriteAllToConsole(carRepository);
+            }
+            break;
+        case "2":
+            Console.WriteLine("Dodaj samochód do listy serwisowej");
+            {
+                AddCar(carRepository); 
+                break;
+            }
+        case "3":
+            Console.WriteLine("Usuń samochód z listy serwisowej");
+            {
+                RemoveCar(carRepository);
+                break;
+            }
+        default: Console.WriteLine("wybierz numer akcji");
+            break;
     }
+}
+
+void RemoveCar(IRepository<Car> carRepository)
+{
+    var CarId = FindCarById(carRepository);
+    if(CarId != null)
+    {
+        carRepository.Remove(CarId);
+    }
+}
+
+object FindCarById(IRepository<Car> carRepository)
+{
+    throw new NotImplementedException();
+}
+
+void AddCar(IRepository<Car> carRepository)
+{
+    var newCar = new Car();
+    carRepository.Add(newCar);   
+}
+
+static void WriteAllToConsole<T>(IReadRepository<T> repository) where T : class, ICar, new()
+{
+    var cars = repository.GetAll();
+    if (cars.ToList().Count == 0)
+    {
+        Console.WriteLine("Nie znaleziono samochodów");
+    }
+    else if (cars.ToList().Count > 0)
+    {
+        Console.WriteLine(cars);
+    }
+
 }
